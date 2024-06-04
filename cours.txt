@@ -1,0 +1,168 @@
+pytest documentation : https://pytest-django.readthedocs.io/en/latest/
+
+1. create tests folder in project scope and in app1
+2. create a simple test in the project scope tests folder 
+'''
+import pytest
+
+def test_example():
+    assert 1 == 1
+
+'''
+3. run the test by executing the command 'pytest' on the project scope folder
+4. edit the test file in the core folder
+'''
+import pytest 
+
+def twins():
+    assert 'kaba' == 'KABA'.lower()
+'''
+5. run the test : pytest tests/test_ex1.py::test_example
+
+6. using pytest to skip a test (use of decorators pytest.mark.skip)
+'''
+@pytest.mark.skip
+def sayHello():
+    assert 'hello' == 'hello'
+'''
+
+7. A pattern for writing test Arrange Act Assert 3As
+
+8. fixtures
+'''
+import pytest 
+
+@pytest.fixture()
+def fixture_1():
+    print('running fixuture 1')
+
+    return 1 
+
+
+def test_example2(fixture_1):
+    num = fixture_1
+
+    assert num == 1
+
+'''
+9. to run with report : pytest -rP (to display the print statements)
+
+10. add scope to @pytest.fixture(scope="session)
+It will help the fixture to serve both tests at the same time. 
+
+11. testing on the database 
+'''
+import pytest
+from django.contrib.auth.models import User 
+
+@pytest.mark.django_db 
+def test_user_create():
+    User.objects.create('test', 'test@test.com', test)
+'''
+
+12. install pytest-factoryboy with pip 
+
+13. install Faker with pip 
+
+14. create fatories.py file in tests folder 
+'''
+import factory
+from faker import Faker 
+from django.contrib.auth.models import User 
+fake = Faker()
+class UserFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = User 
+    username = fake.name 
+    is_staff = 'True'
+'''
+
+
+15. Register the factory in conftest.py in the project scope (create conftest if not exists)
+'''
+import pytest 
+
+from pytest_factoryboy import register
+from tests.factories import UserFactory
+
+register(UserFactory)
+
+'''
+
+16. create a fixture from the factory in conftest.py 
+'''
+# ... code already in conftest.py 
+@pytest.fixture
+def new_user1(db, user_factory):
+    user = user_factory.create()
+    return user 
+'''
+
+17. create a model Review and Comment in app1/models.py 
+'''
+from django.db import models
+from django.contrib.auth.models import User 
+
+18. Create your models here.
+
+class Review(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    content = models.TextField()
+
+
+
+class Comment(models.Model):
+    user   = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, blank=True, null=True)
+    content = models.TextField(default=' ')
+'''
+
+19. Make migrations and create the factories for Review and Comment 
+'''
+
+class ReviewFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Review
+    
+    content = fake.text()
+    user    = factory.SubFactory(UserFactory)
+
+
+class CommentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Comment 
+    
+    user    = factory.SubFactory(UserFactory)
+    review  = factory.SubFactory(ReviewFactory)
+    content = fake.text()
+
+'''
+
+20. Import the factories into conftest and register them 
+'''
+from tests.factories import  ReviewFactory, CommentFactory
+
+register(ReviewFactory)
+register(CommentFactory)
+
+'''
+
+21. create a new test file and write a test 
+
+'''
+import pytest 
+
+def test_review(review_factory):
+    review = review_factory.build()
+    print(review_factory.content)
+    assert True
+
+
+def test_comment(comment_factory):
+    comment = comment_factory.build()
+    print(comment.content)
+    assert True 
+'''
+
+22. run the tests 
+
